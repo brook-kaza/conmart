@@ -28,7 +28,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
-import { formatPrice, getLocalizedUnit, getCategoryTitle } from "@/lib/i18n/translations";
+import {
+  formatPrice,
+  getLocalizedUnit,
+  getCategoryTitle,
+  getLocalizedLocation,
+} from "@/lib/i18n/translations";
 import { PurchaseRequestModal } from "@/components/enquiry/purchase-request-modal";
 import type { ProductWithOffers, CompetingOffer } from "@/lib/data/catalog";
 
@@ -37,7 +42,7 @@ interface ProductOffersViewProps {
 }
 
 export function ProductOffersView({ product }: ProductOffersViewProps) {
-  const { locale } = useLanguage();
+  const { locale, t } = useLanguage();
   const [selectedListingForEnquiry, setSelectedListingForEnquiry] = useState<CompetingOffer | null>(
     null
   );
@@ -65,10 +70,10 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
                 {localizedCategory}
               </Badge>
               <Badge className="bg-emerald-600 text-white font-medium text-xs gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Factory Spec Verified
+                <CheckCircle2 className="h-3 w-3" /> {t("offers_spec_verified")}
               </Badge>
               <Badge variant="outline" className="font-mono text-xs">
-                {product.offers.length} Competing Supplier Offers
+                {product.offers.length} {t("offers_competing_count")}
               </Badge>
             </div>
 
@@ -98,13 +103,13 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
           {product.offers.length > 0 && product.offers[0].lowestPrice !== null && (
             <div className="shrink-0 rounded-xl border border-primary/30 bg-primary/5 p-5 text-right space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Best Available Rate
+                {t("offers_best_rate")}
               </span>
               <div className="font-mono text-3xl font-extrabold text-foreground">
                 {formatPrice(product.offers[0].lowestPrice, locale)}
               </div>
               <div className="text-xs text-muted-foreground">
-                per {unitLabel} (Ex-Works Depot)
+                per {unitLabel} ({t("offers_ex_works_wholesale")})
               </div>
             </div>
           )}
@@ -117,10 +122,10 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
           <div>
             <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" />
-              Competing Supplier Depots
+              {t("offers_competing_depots_title")}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Compare wholesale pricing, minimum order quantities, and depot locations across Addis Ababa.
+              {t("offers_competing_depots_desc")}
             </p>
           </div>
         </div>
@@ -130,19 +135,17 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
           <AlertCircle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
           <div className="space-y-0.5">
             <span className="font-bold block">
-              {locale === "am" ? "የዋጋ ማረጋገጫ ማስታወሻ፦" : "Notice on Indicative Pricing:"}
+              {t("offers_indicative_title")}
             </span>
             <p className="leading-relaxed text-[11px] opacity-90">
-              {locale === "am"
-                ? "በኮንማርት ላይ የሚታዩ ዋጋዎች ሁሉ ገላጭ (Indicative) ናቸው። የግንባታ ዕቃዎች ዋጋ እንደ ገበያው ሁኔታ ስለሚለዋወጥ፣ ትክክለኛውን ዋጋ አቅራቢው የፍላጎት ጥያቄዎን ተቀብሎ አድራሻ ሲለዋወጥ በቀጥታ ያረጋግጣል።"
-                : "All wholesale figures displayed are indicative references. Because material costs fluctuate in Addis Ababa, exact contractual prices are confirmed directly with the supplier depot upon contact unlock."}
+              {t("offers_indicative_desc")}
             </p>
           </div>
         </div>
 
         {product.offers.length === 0 ? (
           <div className="rounded-xl border border-border p-12 text-center text-sm text-muted-foreground">
-            No active supplier listings currently available for this specification.
+            {t("offers_empty_notice")}
           </div>
         ) : (
           <div className="grid gap-4">
@@ -169,7 +172,7 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
                           </span>
                           {isBestPrice && (
                             <Badge className="bg-primary text-primary-foreground font-semibold text-[10px]">
-                              Lowest Rate
+                              {t("offers_lowest_rate")}
                             </Badge>
                           )}
                           <Badge variant="outline" className="text-[10px] font-mono uppercase">
@@ -180,22 +183,22 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1.5">
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3.5 w-3.5 text-primary" />
-                            {offer.location}
+                            {getLocalizedLocation(offer.location, locale)}
                           </span>
                           <span>•</span>
                           <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            {offer.vatRegistered ? "VAT Invoice Included" : "Standard Price"}
+                            {offer.vatRegistered ? t("offers_vat_included") : t("offers_standard_price")}
                           </span>
                           <span>•</span>
-                          <span>MOQ: <strong className="text-foreground">{offer.moq} {unitLabel}</strong></span>
+                          <span>{t("offers_moq_label")} <strong className="text-foreground">{offer.moq} {unitLabel}</strong></span>
                         </div>
                       </div>
 
                       {/* Pricing and Actions */}
                       <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
                         <div className="text-xs text-muted-foreground uppercase font-semibold">
-                          Ex-Works Wholesale
+                          {t("offers_ex_works_wholesale")}
                         </div>
                         <div className="font-mono text-2xl font-extrabold text-foreground">
                           {offer.lowestPrice !== null
@@ -216,7 +219,7 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
                           onClick={() => toggleTiers(offer.listingId)}
                           className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                         >
-                          <span>{offer.tiers.length} Volume Pricing Tiers</span>
+                          <span>{offer.tiers.length} {t("offers_volume_tiers_toggle")}</span>
                           <ChevronDown
                             className={`h-3.5 w-3.5 transition-transform ${
                               isTiersExpanded ? "rotate-180" : ""
@@ -249,7 +252,7 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/60">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Truck className="h-4 w-4 text-primary shrink-0" />
-                        <span>Site delivery & offloading available upon inquiry</span>
+                        <span>{t("offers_freight_available")}</span>
                       </div>
 
                       <div className="flex items-center gap-2 ml-auto">
@@ -261,7 +264,7 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
                           )}
                         >
                           <Calculator className="h-3.5 w-3.5" />
-                          Proforma Calculator
+                          {t("offers_btn_proforma")}
                         </Link>
 
                         <Button
@@ -270,7 +273,7 @@ export function ProductOffersView({ product }: ProductOffersViewProps) {
                           className="gap-1.5 text-xs font-semibold shadow-xs"
                         >
                           <SendHorizontal className="h-3.5 w-3.5" />
-                          Send Purchase Enquiry
+                          {t("offers_btn_send_enquiry")}
                         </Button>
                       </div>
                     </div>

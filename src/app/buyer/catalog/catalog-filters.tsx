@@ -27,6 +27,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CategoryWithCount } from "@/lib/data/catalog";
+import { useLanguage } from "@/lib/i18n/language-context";
+import {
+  getCategoryTitle,
+  getCategoryDescription,
+  getLocalizedLocation,
+} from "@/lib/i18n/translations";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Container,
@@ -63,6 +69,7 @@ export function CatalogFilters({
   initialSearch = "",
   initialLocation = "",
 }: CatalogFiltersProps) {
+  const { t, locale } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -133,13 +140,13 @@ export function CatalogFilters({
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-              <span>What do you need for your project?</span>
+              <span>{t("filter_what_needed")}</span>
               <span className="text-xs font-normal text-muted-foreground hidden sm:inline">
-                (Click to filter products)
+                {t("filter_click_to_filter")}
               </span>
             </h2>
             <p className="text-xs text-muted-foreground">
-              Direct procurement from certified manufacturers & warehouse yards across Ethiopia
+              {t("filter_subtitle")}
             </p>
           </div>
 
@@ -152,7 +159,7 @@ export function CatalogFilters({
               !activeCategory && "bg-primary text-primary-foreground hover:bg-primary/90"
             )}
           >
-            All Materials ({categories.reduce((a, c) => a + c.listingCount, 0)})
+            {t("filter_all_materials")} ({categories.reduce((a, c) => a + c.listingCount, 0)})
           </Button>
         </div>
 
@@ -161,6 +168,8 @@ export function CatalogFilters({
           {categories.map((cat) => {
             const Icon = ICON_MAP[cat.iconName] || Package;
             const isSelected = activeCategory === cat.slug;
+            const localizedCatName = getCategoryTitle(cat.slug, cat.name, locale);
+            const localizedCatDesc = getCategoryDescription(cat.slug, cat.description || "", locale);
 
             return (
               <button
@@ -185,7 +194,7 @@ export function CatalogFilters({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={cat.imageUrl}
-                      alt={cat.name}
+                      alt={localizedCatName}
                       className={cn(
                         "h-full w-full object-cover transition-transform duration-500",
                         isSelected ? "scale-105" : "group-hover:scale-110"
@@ -213,7 +222,12 @@ export function CatalogFilters({
                       <Icon className="h-4 w-4" />
                     </div>
                     <span className="text-[11px] font-medium text-white/90 drop-shadow">
-                      {cat.listingCount} {cat.listingCount === 1 ? "offer" : "offers"}
+                      {cat.listingCount}{" "}
+                      {locale === "am"
+                        ? t("catalog_offers_count")
+                        : cat.listingCount === 1
+                        ? t("catalog_offer_single")
+                        : t("catalog_offers_count")}
                     </span>
                   </div>
 
@@ -233,11 +247,11 @@ export function CatalogFilters({
                       isSelected ? "text-primary" : "text-foreground group-hover:text-primary"
                     )}
                   >
-                    {cat.name}
+                    {localizedCatName}
                   </h3>
-                  {cat.description && (
+                  {localizedCatDesc && (
                     <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                      {cat.description}
+                      {localizedCatDesc}
                     </p>
                   )}
                 </div>
@@ -261,7 +275,7 @@ export function CatalogFilters({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search material brand, grade (Dangote, Zuquala, HCB)..."
+            placeholder={t("catalog_search_placeholder")}
             className="pl-9 pr-16 h-9 text-xs"
           />
           {search && (
@@ -281,7 +295,7 @@ export function CatalogFilters({
             size="sm"
             className="absolute right-1 h-7 px-2.5 text-xs font-medium"
           >
-            Find
+            {t("catalog_find_btn")}
           </Button>
         </form>
 
@@ -289,7 +303,7 @@ export function CatalogFilters({
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />
-            <span>Yard Location:</span>
+            <span>{t("filter_yard_location")}</span>
           </div>
 
           <select
@@ -301,10 +315,10 @@ export function CatalogFilters({
             }}
             className="h-8 rounded-md border border-border bg-background px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">All Ethiopia</option>
+            <option value="">{t("filter_all_cities")}</option>
             {ETHIOPIAN_LOCATIONS.map((loc) => (
               <option key={loc} value={loc}>
-                {loc}
+                {getLocalizedLocation(loc, locale)}
               </option>
             ))}
           </select>
@@ -317,7 +331,7 @@ export function CatalogFilters({
               className="h-8 text-xs text-muted-foreground hover:text-destructive gap-1 px-2"
             >
               <X className="h-3 w-3" />
-              Reset Filters
+              {t("filter_reset_btn")}
             </Button>
           )}
         </div>

@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ImageUploaderProps {
   value?: string;
@@ -37,49 +38,63 @@ interface ImageUploaderProps {
 const MATERIAL_PRESETS = [
   {
     name: "OPC Cement",
+    nameAm: "ኦፒሲ ሲሚንቶ",
     tag: "Cement",
+    tagAm: "ሲሚንቶ",
     icon: Container,
     bg: "bg-slate-800 text-slate-100",
     url: "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&w=800&q=80",
   },
   {
     name: "Deformed Rebar",
+    nameAm: "የተቆረጠፈ ብረት",
     tag: "Steel",
+    tagAm: "ብረታብረት",
     icon: Columns3,
     bg: "bg-amber-950/80 text-amber-300",
     url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
   },
   {
     name: "River Sand",
+    nameAm: "የወንዝ አሸዋ",
     tag: "Aggregates",
+    tagAm: "አሸዋ",
     icon: Mountain,
     bg: "bg-yellow-950/80 text-yellow-300",
     url: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80",
   },
   {
     name: "Crushed Stone",
+    nameAm: "ጠጠር / ኮረት",
     tag: "Aggregates",
+    tagAm: "ጠጠር",
     icon: Mountain,
     bg: "bg-stone-800 text-stone-200",
     url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
   },
   {
     name: "Hollow Blocks",
+    nameAm: "ብሎኬት (HCB)",
     tag: "Blocks",
+    tagAm: "ብሎኬት",
     icon: LayoutGrid,
     bg: "bg-red-950/70 text-red-300",
     url: "https://images.unsplash.com/photo-1584463699039-44e2b0a1a0df?auto=format&fit=crop&w=800&q=80",
   },
   {
     name: "Corrugated Roofing",
+    nameAm: "የጣሪያ ቆርቆሮ",
     tag: "Roofing",
+    tagAm: "ቆርቆሮ",
     icon: Home,
     bg: "bg-cyan-950/70 text-cyan-300",
     url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80",
   },
   {
     name: "Timber Formwork",
+    nameAm: "የፎርምወርክ ሳንቃ",
     tag: "Timber",
+    tagAm: "ሳንቃ",
     icon: TreePine,
     bg: "bg-emerald-950/70 text-emerald-300",
     url: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=800&q=80",
@@ -91,6 +106,7 @@ export function ImageUploader({
   onChange,
   className,
 }: ImageUploaderProps) {
+  const { t, locale } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -199,7 +215,7 @@ export function ImageUploader({
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-3.5 w-3.5" />
-              Replace
+              {t("uploader_replace")}
             </Button>
             <Button
               type="button"
@@ -217,10 +233,10 @@ export function ImageUploader({
 
           <div className="p-3 bg-card border-t border-border/60 flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-              <Check className="h-4 w-4" /> Ready for listing publication
+              <Check className="h-4 w-4" /> {t("uploader_ready")}
             </span>
             <span className="text-muted-foreground truncate max-w-[200px]">
-              {value.startsWith("/uploads") ? "Stored Locally (High Speed)" : "Cloud Storage"}
+              {value.startsWith("/uploads") ? t("uploader_stored_local") : t("uploader_cloud_storage")}
             </span>
           </div>
         </div>
@@ -242,8 +258,8 @@ export function ImageUploader({
           {isUploading ? (
             <div className="flex flex-col items-center gap-2 py-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-medium">Uploading image...</p>
-              <p className="text-xs text-muted-foreground">Persisting securely to storage</p>
+              <p className="text-sm font-medium">{t("uploader_uploading")}</p>
+              <p className="text-xs text-muted-foreground">{t("uploader_persisting")}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
@@ -252,10 +268,10 @@ export function ImageUploader({
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  Click to upload from device or drag & drop
+                  {t("uploader_click_drag")}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  High-res JPEG, PNG, or WebP (up to 5MB)
+                  {t("uploader_file_support")}
                 </p>
               </div>
             </div>
@@ -273,7 +289,7 @@ export function ImageUploader({
       <div className="pt-2">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span>Or select an Ethiopian construction material preset:</span>
+          <span>{t("uploader_or_preset")}</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {MATERIAL_PRESETS.map((preset) => {
@@ -304,10 +320,10 @@ export function ImageUploader({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-semibold leading-tight truncate text-foreground">
-                    {preset.name}
+                    {locale === "am" ? preset.nameAm : preset.name}
                   </p>
                   <span className="text-[9px] text-muted-foreground">
-                    {preset.tag}
+                    {locale === "am" ? preset.tagAm : preset.tag}
                   </span>
                 </div>
               </button>

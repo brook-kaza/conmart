@@ -31,6 +31,13 @@ import { ImageUploader } from "@/components/image-uploader";
 import { updateSellerListing, type CreatePriceTierInput } from "@/app/actions/listings";
 import { PRODUCT_UNIT_LABELS, type ProductUnit, formatETB } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
+import {
+  getCategoryTitle,
+  getLocalizedUnit,
+  getLocalizedLocation,
+  formatPrice,
+} from "@/lib/i18n/translations";
 
 interface ExistingTier {
   id: string;
@@ -61,6 +68,7 @@ export function EditListingForm({
   sellerCompanyName,
   initialTiers,
 }: EditListingFormProps) {
+  const { t, locale } = useLanguage();
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,22 +192,22 @@ export function EditListingForm({
             )}
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Inventory
+            {t("seller_form_back")}
           </Link>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Edit Material & Pricing
+            {t("seller_form_edit_title")}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Update wholesale price tiers, batch photos, and yard logistics for this listing.
+            {t("seller_form_edit_subtitle")}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs font-medium">
-            {categoryName}
+            {getCategoryTitle(categoryName.toLowerCase(), categoryName, locale)}
           </Badge>
           <Badge variant="secondary" className="text-xs font-semibold">
-            {unitLabel}
+            {getLocalizedUnit(unit, locale)}
           </Badge>
         </div>
       </div>
@@ -224,19 +232,19 @@ export function EditListingForm({
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <Package className="h-4 w-4 text-primary" />
-              Material Identification & Yard Location
+              {t("seller_form_basic_info")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="title" className="text-xs font-semibold">
-                Material Commercial Title
+                {t("seller_form_title_label")}
               </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Dangote Cement OPC 42.5R (50kg)"
+                placeholder={t("seller_form_title_placeholder")}
                 className="h-10 text-sm"
                 required
               />
@@ -246,13 +254,13 @@ export function EditListingForm({
               <div className="space-y-1.5">
                 <Label htmlFor="location" className="text-xs font-semibold flex items-center gap-1">
                   <MapPin className="h-3 w-3 text-muted-foreground" />
-                  Warehouse / Depot Location
+                  {t("seller_form_location_label")}
                 </Label>
                 <Input
                   id="location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Addis Ababa, Kaliti Logistics Center"
+                  placeholder={t("seller_form_location_placeholder")}
                   className="h-10 text-sm"
                   required
                 />
@@ -261,7 +269,7 @@ export function EditListingForm({
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold flex items-center gap-1">
                   <Building2 className="h-3 w-3 text-muted-foreground" />
-                  Supplier Depot Name
+                  {locale === "am" ? "የአቅራቢ መጋዘን ስም" : "Supplier Depot Name"}
                 </Label>
                 <Input
                   value={sellerCompanyName}
@@ -277,7 +285,7 @@ export function EditListingForm({
         <Card className="border-border/60 shadow-xs">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold">
-              Material Batch Photo
+              {t("uploader_quick_presets")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -293,10 +301,10 @@ export function EditListingForm({
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <CardTitle className="text-sm font-bold">
-                Wholesale Volume Price Tiers
+                {t("seller_form_tiers_title")}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Adjust minimum quantities and unit prices in Ethiopian Birr ({formatETB(1000, true)}).
+                {t("seller_form_tiers_desc")}
               </p>
             </div>
 
@@ -308,7 +316,7 @@ export function EditListingForm({
               className="h-8 gap-1.5 text-xs font-semibold shadow-2xs"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add Price Tier
+              {t("seller_form_add_tier")}
             </Button>
           </CardHeader>
 
@@ -319,13 +327,13 @@ export function EditListingForm({
                 className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-xl border border-border/80 bg-muted/20 p-3.5 transition-all"
               >
                 <Badge variant="secondary" className="text-[11px] font-bold shrink-0">
-                  Tier #{idx + 1}
+                  {t("seller_form_tier_num").replace("{num}", String(idx + 1))}
                 </Badge>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 flex-1 w-full">
                   <div className="space-y-1">
                     <Label className="text-[10px] text-muted-foreground uppercase font-bold">
-                      Min Qty ({unitLabel})
+                      {t("seller_form_min_qty")} ({getLocalizedUnit(unit, locale)})
                     </Label>
                     <Input
                       type="number"
@@ -341,7 +349,7 @@ export function EditListingForm({
 
                   <div className="space-y-1">
                     <Label className="text-[10px] text-muted-foreground uppercase font-bold">
-                      Max Qty ({unitLabel})
+                      {t("seller_form_max_qty")} ({getLocalizedUnit(unit, locale)})
                     </Label>
                     <Input
                       type="number"
@@ -357,7 +365,7 @@ export function EditListingForm({
 
                   <div className="col-span-2 sm:col-span-1 space-y-1">
                     <Label className="text-[10px] text-muted-foreground uppercase font-bold">
-                      Unit Price (ETB / {unitLabel})
+                      {t("seller_form_unit_price")} (ETB / {getLocalizedUnit(unit, locale)})
                     </Label>
                     <Input
                       type="number"
@@ -367,7 +375,7 @@ export function EditListingForm({
                       onChange={(e) =>
                         handleTierChange(idx, "unitPrice", parseFloat(e.target.value) || 0)
                       }
-                      className="h-9 text-xs font-bold"
+                      className="h-9 text-xs font-bold font-mono"
                       required
                     />
                   </div>
@@ -397,7 +405,7 @@ export function EditListingForm({
             href="/seller/dashboard"
             className={cn(buttonVariants({ variant: "outline" }), "text-xs font-semibold h-10 px-4")}
           >
-            Cancel
+            {t("btn_cancel")}
           </Link>
           <Button
             type="submit"
@@ -407,12 +415,12 @@ export function EditListingForm({
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Updating Listing...
+                {locale === "am" ? "በማሻሻል ላይ..." : "Updating Listing..."}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Save Changes
+                {locale === "am" ? "ለውጦችን መዝግብ" : "Save Changes"}
               </>
             )}
           </Button>

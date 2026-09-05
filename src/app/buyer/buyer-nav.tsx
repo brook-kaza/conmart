@@ -85,7 +85,7 @@ export function BuyerMobileBottomNav({ signOutAction }: { signOutAction: () => P
     },
     {
       href: "/buyer/enquiries",
-      label: "Enquiries",
+      label: t("buyer_enquiries_title", "My Enquiries"),
       icon: SendHorizontal,
     },
     {

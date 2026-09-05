@@ -33,6 +33,13 @@ import { createSellerListing, type CreatePriceTierInput } from "@/app/actions/li
 import { ProductUnit } from "@prisma/client";
 import { PRODUCT_UNIT_LABELS, formatETB } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
+import {
+  getCategoryTitle,
+  getLocalizedUnit,
+  getLocalizedLocation,
+  formatPrice,
+} from "@/lib/i18n/translations";
 
 interface CategoryOption {
   id: string;
@@ -61,6 +68,7 @@ export function NewListingForm({
   curatedProducts = [],
   sellerCompanyName,
 }: NewListingFormProps) {
+  const { t, locale } = useLanguage();
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -176,22 +184,21 @@ export function NewListingForm({
 
   return (
     <div className="space-y-6">
-      {/* Back Navigation */}
       <Link
         href="/seller/dashboard"
         className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Seller Dashboard
+        {t("seller_form_back")}
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border/60 pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            List New Construction Material
+            {t("seller_form_create_title")}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Provide technical specifications, upload high-definition photos, and configure wholesale volume discounts.
+            {t("seller_form_create_subtitle")}
           </p>
         </div>
       </div>
@@ -204,21 +211,18 @@ export function NewListingForm({
       )}
 
       <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-5">
-        {/* Left Form (3 columns) */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Card 1: Material Identification */}
           <Card className="border-border/60">
             <CardHeader className="pb-3 border-b border-border/40">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Package className="h-4 w-4 text-primary" />
-                <span>1. Material Details</span>
+                <span>1. {t("seller_form_basic_info")}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              {/* Category */}
               <div className="space-y-1.5">
                 <Label htmlFor="category" className="text-xs font-semibold">
-                  Category *
+                  {t("seller_form_category_label")} *
                 </Label>
                 <select
                   id="category"
@@ -232,20 +236,19 @@ export function NewListingForm({
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {getCategoryTitle(c.slug, c.name, locale)}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Curated Material Specification Selection (Guide Section 8) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold">
-                    Curated Material Specification *
+                    {t("seller_form_curated_product")} *
                   </Label>
                   <span className="text-[10px] text-muted-foreground">
-                    Matches catalogue for contractor comparison
+                    {t("seller_form_curated_desc")}
                   </span>
                 </div>
                 <select
@@ -268,32 +271,31 @@ export function NewListingForm({
                   className="w-full h-9 rounded-md border border-border bg-background px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   {curatedProducts.filter((p) => p.categoryId === categoryId).length > 0 && (
-                    <optgroup label="Official Admin-Curated Catalogue">
+                    <optgroup label={t("seller_form_select_standard")}>
                       {curatedProducts
                         .filter((p) => p.categoryId === categoryId)
                         .map((p) => (
                           <option key={p.id} value={p.id}>
-                            {p.title} ({p.unit})
+                            {p.title} ({getLocalizedUnit(p.unit, locale)})
                           </option>
                         ))}
                     </optgroup>
                   )}
-                  <optgroup label="Unlisted / Propose New Material">
+                  <optgroup label={t("seller_form_custom_spec")}>
                     <option value="custom">
-                      + Propose New Custom Material Specification
+                      {t("seller_form_custom_spec")}
                     </option>
                   </optgroup>
                 </select>
               </div>
 
-              {/* Title */}
               <div className="space-y-1.5">
                 <Label htmlFor="title" className="text-xs font-semibold">
-                  Product / Material Title *
+                  {t("seller_form_title_label")} *
                 </Label>
                 <Input
                   id="title"
-                  placeholder="e.g., Dangote Cement OPC 42.5R (50kg Bag) or Rebar Ø16mm"
+                  placeholder={t("seller_form_title_placeholder")}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="h-9 text-xs"
@@ -301,10 +303,9 @@ export function NewListingForm({
                 />
               </div>
 
-              {/* Unit of measure */}
               <div className="space-y-1.5">
                 <Label htmlFor="unit" className="text-xs font-semibold">
-                  Standard Unit of Measure *
+                  {t("seller_form_unit_label")} *
                 </Label>
                 <select
                   id="unit"
@@ -312,22 +313,21 @@ export function NewListingForm({
                   onChange={(e) => setUnit(e.target.value as ProductUnit)}
                   className="w-full h-9 rounded-md border border-border bg-background px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  <option value={ProductUnit.QUINTAL}>QUINTAL (100 kg / 2 bags - Standard Cement/Grain)</option>
-                  <option value={ProductUnit.BAG}>BAG (50 kg)</option>
-                  <option value={ProductUnit.TON}>TON (1,000 kg - Structural Steel & Rebar)</option>
-                  <option value={ProductUnit.PIECE}>PIECE (Blocks, Bricks, Iron Sheets, Pipes)</option>
-                  <option value={ProductUnit.M3}>M³ (Cubic Meter - Sand, Gravel, Crushed Stone)</option>
+                  <option value={ProductUnit.QUINTAL}>{getLocalizedUnit(ProductUnit.QUINTAL, locale)} (100 kg)</option>
+                  <option value={ProductUnit.BAG}>{getLocalizedUnit(ProductUnit.BAG, locale)} (50 kg)</option>
+                  <option value={ProductUnit.TON}>{getLocalizedUnit(ProductUnit.TON, locale)} (1,000 kg)</option>
+                  <option value={ProductUnit.PIECE}>{getLocalizedUnit(ProductUnit.PIECE, locale)}</option>
+                  <option value={ProductUnit.M3}>{getLocalizedUnit(ProductUnit.M3, locale)}</option>
                 </select>
               </div>
 
-              {/* Technical Specifications */}
               <div className="pt-2 border-t border-border/40">
                 <p className="text-xs font-semibold text-foreground mb-2.5">
-                  Technical Specifications (Optional but recommended)
+                  {t("seller_form_specs_title")}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Brand / Manufacturer</Label>
+                    <Label className="text-[11px] text-muted-foreground">{t("seller_form_spec_brand")}</Label>
                     <Input
                       placeholder="e.g. Dangote, Mugher, Zuquala"
                       value={brand}
@@ -336,7 +336,7 @@ export function NewListingForm({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Grade / Class</Label>
+                    <Label className="text-[11px] text-muted-foreground">{t("seller_form_spec_grade")}</Label>
                     <Input
                       placeholder="e.g. 42.5R, Grade 60, Class A"
                       value={grade}
@@ -345,7 +345,7 @@ export function NewListingForm({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Standard / Quality Code</Label>
+                    <Label className="text-[11px] text-muted-foreground">{t("seller_form_spec_standard")}</Label>
                     <Input
                       placeholder="e.g. ES 1177-1, ASTM A615"
                       value={standard}
@@ -354,7 +354,7 @@ export function NewListingForm({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Source / Origin</Label>
+                    <Label className="text-[11px] text-muted-foreground">{t("seller_form_spec_origin")}</Label>
                     <Input
                       placeholder="e.g. Mugher Factory, Kaliti Yard"
                       value={origin}
@@ -367,18 +367,16 @@ export function NewListingForm({
             </CardContent>
           </Card>
 
-          {/* Card 2: Image Upload */}
           <Card className="border-border/60">
             <CardHeader className="pb-3 border-b border-border/40">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span>2. Product Photography & Visuals</span>
+                <span>2. {t("uploader_quick_presets")}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
               <p className="text-xs text-muted-foreground mb-3">
-                Upload authentic photos of your material stock, warehouse yard, or batch bags.
-                Clear photos dramatically increase proforma generation requests.
+                {t("uploader_ready")}
               </p>
               <ImageUploader
                 value={imageUrl}
@@ -387,40 +385,35 @@ export function NewListingForm({
             </CardContent>
           </Card>
 
-          {/* Card 3: Location Yard */}
           <Card className="border-border/60">
             <CardHeader className="pb-3 border-b border-border/40">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span>3. Warehouse / Depot Location</span>
+                <span>3. {t("seller_form_location_label")}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 pt-4">
               <div className="space-y-1.5">
                 <Label htmlFor="location" className="text-xs font-semibold">
-                  Yard Address & City *
+                  {t("seller_form_location_label")} *
                 </Label>
                 <Input
                   id="location"
-                  placeholder="e.g., Addis Ababa, Kaliti Industrial Zone or Adama Logistics Yard"
+                  placeholder={t("seller_form_location_placeholder")}
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="h-9 text-xs"
                   required
                 />
-                <p className="text-[11px] text-muted-foreground">
-                  Buyers will calculate freight or dispatch pickup trucks to this location.
-                </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Card 4: Volume Price Tiers */}
           <Card className="border-border/60">
             <CardHeader className="pb-3 border-b border-border/40 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Tag className="h-4 w-4 text-primary" />
-                <span>4. Volume Pricing Schedule (ETB)</span>
+                <span>4. {t("seller_form_tiers_title")}</span>
               </CardTitle>
               <Button
                 type="button"
@@ -430,12 +423,12 @@ export function NewListingForm({
                 className="h-7 text-xs gap-1"
               >
                 <Plus className="h-3 w-3" />
-                Add Tier
+                {t("seller_form_add_tier")}
               </Button>
             </CardHeader>
             <CardContent className="space-y-3 pt-4">
               <p className="text-xs text-muted-foreground">
-                Set volume discount brackets. Buyers ordering larger quantities automatically qualify for discounted tier rates.
+                {t("seller_form_tiers_desc")}
               </p>
 
               <div className="space-y-2.5">
@@ -445,12 +438,11 @@ export function NewListingForm({
                     className="flex flex-wrap sm:flex-nowrap items-center gap-2 rounded-lg border border-border/60 bg-card p-3 text-xs"
                   >
                     <span className="w-14 font-semibold text-muted-foreground text-[11px]">
-                      Tier {idx + 1}
+                      {t("seller_form_tier_num").replace("{num}", String(idx + 1))}
                     </span>
 
-                    {/* Min Qty */}
                     <div className="flex-1 min-w-[90px]">
-                      <Label className="text-[10px] text-muted-foreground">Min Qty</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t("seller_form_min_qty")}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -462,11 +454,10 @@ export function NewListingForm({
                       />
                     </div>
 
-                    <span className="text-muted-foreground mt-3">to</span>
+                    <span className="text-muted-foreground mt-3">—</span>
 
-                    {/* Max Qty */}
                     <div className="flex-1 min-w-[90px]">
-                      <Label className="text-[10px] text-muted-foreground">Max Qty</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t("seller_form_max_qty")}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -478,9 +469,8 @@ export function NewListingForm({
                       />
                     </div>
 
-                    {/* Unit Price ETB */}
                     <div className="flex-1 min-w-[110px]">
-                      <Label className="text-[10px] text-muted-foreground">Unit Price (ETB)</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t("seller_form_unit_price")}</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -493,7 +483,6 @@ export function NewListingForm({
                       />
                     </div>
 
-                    {/* Remove button */}
                     <Button
                       type="button"
                       variant="ghost"
@@ -510,13 +499,12 @@ export function NewListingForm({
             </CardContent>
           </Card>
 
-          {/* Submit Button */}
           <div className="flex items-center justify-end gap-3 pt-4">
             <Link
               href="/seller/dashboard"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs")}
             >
-              Cancel
+              {t("btn_cancel")}
             </Link>
             <Button
               type="submit"
@@ -526,31 +514,29 @@ export function NewListingForm({
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Publishing Material...
+                  {t("seller_form_submitting_btn")}
                 </>
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4" />
-                  Publish Material Listing
+                  {t("seller_form_submit_btn")}
                 </>
               )}
             </Button>
           </div>
         </div>
 
-        {/* Right Column: Live Buyer Preview Card (2 columns) */}
         <div className="lg:col-span-2">
           <div className="sticky top-6 space-y-4">
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                Live Catalog Preview
+                {t("seller_form_live_preview")}
               </h3>
               <p className="text-[11px] text-muted-foreground mb-3">
-                This is exactly how contractors and buyers will view your material in the catalog.
+                {t("seller_form_live_preview_desc")}
               </p>
             </div>
 
-            {/* Preview Card */}
             <Card className="overflow-hidden border-border bg-card shadow-lg">
               <div className="relative aspect-video w-full overflow-hidden bg-muted">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -565,13 +551,13 @@ export function NewListingForm({
                 />
                 <div className="absolute top-2.5 left-2.5">
                   <Badge variant="secondary" className="backdrop-blur-md bg-background/80 text-[10px]">
-                    {selectedCategory?.name || "Category"}
+                    {selectedCategory ? getCategoryTitle(selectedCategory.slug, selectedCategory.name, locale) : "Category"}
                   </Badge>
                 </div>
                 <div className="absolute bottom-2 left-2.5">
                   <span className="inline-flex items-center gap-1 rounded bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
                     <Tag className="h-3 w-3 text-amber-400" />
-                    {priceTiers.length} volume tiers
+                    {priceTiers.length} {t("catalog_volume_tiers")}
                   </span>
                 </div>
               </div>
@@ -579,7 +565,7 @@ export function NewListingForm({
               <CardContent className="p-4 space-y-3">
                 <div>
                   <h4 className="font-bold text-sm text-foreground line-clamp-1">
-                    {title || "Your Material Title Here"}
+                    {title || (locale === "am" ? "የዕቃው ስም እዚህ ይታያል" : "Your Material Title Here")}
                   </h4>
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Building2 className="h-3 w-3 text-primary" />
@@ -589,30 +575,30 @@ export function NewListingForm({
 
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" />
-                  <span className="truncate">{location || "Warehouse Yard Location"}</span>
+                  <span className="truncate">{getLocalizedLocation(location || "Addis Ababa", locale)}</span>
                 </div>
 
                 <div className="border-t border-border/40 pt-3 flex items-end justify-between">
                   <div>
-                    <span className="text-[10px] text-muted-foreground uppercase">Starting from</span>
-                    <p className="text-base font-extrabold text-foreground">
-                      {formatETB(lowestPrice)}
+                    <span className="text-[10px] text-muted-foreground uppercase">{t("seller_form_starting_from")}</span>
+                    <p className="text-base font-extrabold text-foreground font-mono">
+                      {formatPrice(lowestPrice, locale)}
                       <span className="text-xs font-normal text-muted-foreground ml-1">
-                        / {unitLabel}
+                        / {getLocalizedUnit(unit, locale)}
                       </span>
                     </p>
                   </div>
                   <span className={cn(buttonVariants({ size: "sm", variant: "default" }), "h-7 text-xs pointer-events-none")}>
-                    Proforma
+                    {t("catalog_btn_proforma")}
                   </span>
                 </div>
               </CardContent>
             </Card>
 
             <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-[11px] text-muted-foreground space-y-1">
-              <p className="font-semibold text-foreground">💡 Pro Seller Tip</p>
+              <p className="font-semibold text-foreground">{t("seller_form_pro_tip_title")}</p>
               <p>
-                Listings with clear volume tiers (e.g. 10–99 vs 500+ quintals) receive 3x more bulk order inquiries from Ethiopian commercial contractors.
+                {t("seller_form_pro_tip_desc")}
               </p>
             </div>
           </div>

@@ -101,27 +101,33 @@ export function PurchaseRequestModal({
 
     const parsedQty = parseFloat(qty);
     if (isNaN(parsedQty) || parsedQty <= 0) {
-      setErrorMsg("Please enter a valid order quantity.");
+      setErrorMsg(locale === "am" ? "እባክዎ ትክክለኛ የትዕዛዝ መጠን ያስገቡ።" : "Please enter a valid order quantity.");
       return;
     }
 
     if (!exactAddress.trim()) {
-      setErrorMsg("Please provide your site location or landmark in " + subcity + ".");
+      setErrorMsg(
+        locale === "am"
+          ? "እባክዎ በ" + subcity + " ውስጥ ያለዎትን የግንባታ ቦታ ወይም መለያ ቦታ ይግለጹ።"
+          : "Please provide your site location or landmark in " + subcity + "."
+      );
       return;
     }
 
     const vehicleLabels: Record<string, string> = {
-      SINO_TRUCK: "Sino Truck (30-40 Tonne Heavy Access)",
-      FSR_TRUCK: "Isuzu FSR (8-12 Tonne Medium Access)",
-      ISUZU_NPR: "Isuzu NPR (3.5-5 Tonne Narrow Urban Access)",
-      TRAILER_LOWBED: "Low-bed Semi-Trailer (40ft for 12m Rebar)",
-      PICKUP: "Small Site Pickup",
+      SINO_TRUCK: t("modal_vehicle_sino"),
+      FSR_TRUCK: t("modal_vehicle_fsr"),
+      ISUZU_NPR: t("modal_vehicle_npr"),
+      TRAILER_LOWBED: t("modal_vehicle_trailer"),
+      PICKUP: t("modal_vehicle_pickup"),
     };
 
     const fullAddress = `${subcity} — ${exactAddress.trim()}`;
     const constraintsText = [
       `Vehicle Access: ${vehicleLabels[vehicleAccess] || vehicleAccess}`,
-      unloadRequired ? "Labor unloading required on-site." : "Offloading handled by contractor.",
+      unloadRequired
+        ? locale === "am" ? "በቦታው ላይ የጉልበት ማውረድ ያስፈልጋል።" : "Labor unloading required on-site."
+        : locale === "am" ? "ማውረድ በተቋራጩ ይከናወናል።" : "Offloading handled by contractor.",
       notes.trim() ? `Notes: ${notes.trim()}` : "",
       `Payment Mode: ${paymentMode}`,
     ]
@@ -148,7 +154,7 @@ export function PurchaseRequestModal({
           router.push("/buyer/enquiries");
         }, 2000);
       } else {
-        setErrorMsg(res.error || "Failed to submit enquiry.");
+        setErrorMsg(res.error || (locale === "am" ? "ጥያቄውን መላክ አልተሳካም።" : "Failed to submit enquiry."));
       }
     });
   };
@@ -192,12 +198,14 @@ export function PurchaseRequestModal({
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
               <CheckCircle2 className="h-6 w-6" />
             </div>
-            <h4 className="text-lg font-bold text-foreground">Purchase Enquiry Submitted!</h4>
+            <h4 className="text-lg font-bold text-foreground">
+              {locale === "am" ? "የግዢ ጥያቄዎ በተሳካ ሁኔታ ተልኳል!" : "Purchase Request Submitted!"}
+            </h4>
             <p className="text-xs text-muted-foreground font-mono">
-              Reference Code: <span className="font-bold text-primary">{successCode}</span>
+              {locale === "am" ? "የማጣቀሻ ቁጥር፦" : "Reference Code:"} <span className="font-bold text-primary">{successCode}</span>
             </p>
             <p className="text-xs text-muted-foreground">
-              Redirecting you to your enquiries tracker...
+              {t("modal_redirecting")}
             </p>
           </div>
         ) : (
@@ -222,10 +230,10 @@ export function PurchaseRequestModal({
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">
-                  Est. Base Unit Price
+                  {t("modal_base_price_label")}
                 </Label>
                 <div className="flex h-9 w-full items-center rounded-md border bg-muted/40 px-3 text-xs font-mono font-semibold text-foreground">
-                  {basePrice ? formatPrice(basePrice, locale) : "Live Market Rate"}
+                  {basePrice ? formatPrice(basePrice, locale) : t("modal_live_market_rate")}
                 </div>
               </div>
             </div>
@@ -245,8 +253,8 @@ export function PurchaseRequestModal({
                 >
                   <Truck className="h-4 w-4 text-primary shrink-0" />
                   <div>
-                    <div className="font-bold text-foreground">Site Delivered</div>
-                    <div className="text-[11px] text-muted-foreground">Delivered to your project</div>
+                    <div className="font-bold text-foreground">{t("modal_site_delivered_title")}</div>
+                    <div className="text-[11px] text-muted-foreground">{t("modal_site_delivered_desc")}</div>
                   </div>
                 </button>
 
@@ -261,8 +269,8 @@ export function PurchaseRequestModal({
                 >
                   <HardHat className="h-4 w-4 text-primary shrink-0" />
                   <div>
-                    <div className="font-bold text-foreground">Ex-Works Pickup</div>
-                    <div className="text-[11px] text-muted-foreground">Pick up from supplier depot</div>
+                    <div className="font-bold text-foreground">{t("modal_ex_works_title")}</div>
+                    <div className="text-[11px] text-muted-foreground">{t("modal_ex_works_desc")}</div>
                   </div>
                 </button>
               </div>
@@ -290,7 +298,7 @@ export function PurchaseRequestModal({
             {/* Vehicle Access Constraints (Addis Ababa Road Feasibility) */}
             <div className="space-y-1.5">
               <Label htmlFor="req-vehicle" className="text-xs font-semibold">
-                Job Site Vehicle Access Feasibility
+                {t("modal_vehicle_access_label")}
               </Label>
               <select
                 id="req-vehicle"
@@ -299,19 +307,19 @@ export function PurchaseRequestModal({
                 className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs shadow-2xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <option value="SINO_TRUCK" className="bg-card text-foreground">
-                  Sino Truck (30-40 Tonne Heavy Tipper Access)
+                  {t("modal_vehicle_sino")}
                 </option>
                 <option value="FSR_TRUCK" className="bg-card text-foreground">
-                  Isuzu FSR (8-12 Tonne Medium Flatbed Access)
+                  {t("modal_vehicle_fsr")}
                 </option>
                 <option value="ISUZU_NPR" className="bg-card text-foreground">
-                  Isuzu NPR (3.5-5 Tonne Narrow Urban Access)
+                  {t("modal_vehicle_npr")}
                 </option>
                 <option value="TRAILER_LOWBED" className="bg-card text-foreground">
-                  Low-bed Semi-Trailer (40ft for 12m Deformed Rebar)
+                  {t("modal_vehicle_trailer")}
                 </option>
                 <option value="PICKUP" className="bg-card text-foreground">
-                  Small Site Pickup / Van
+                  {t("modal_vehicle_pickup")}
                 </option>
               </select>
             </div>
@@ -323,7 +331,7 @@ export function PurchaseRequestModal({
               </Label>
               <Input
                 id="req-address"
-                placeholder="e.g. Near Gerji Imperial roundabout, behind NOC station..."
+                placeholder={t("modal_address_placeholder")}
                 value={exactAddress}
                 onChange={(e) => setExactAddress(e.target.value)}
                 className="text-xs"
@@ -349,7 +357,7 @@ export function PurchaseRequestModal({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="req-pay-mode" className="text-xs font-semibold">
-                  {t("buyer_enquiry_payment_mode")}
+                  {t("modal_payment_method_label")}
                 </Label>
                 <select
                   id="req-pay-mode"
@@ -362,23 +370,23 @@ export function PurchaseRequestModal({
                   className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs shadow-2xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <option value="BANK_TRANSFER" className="bg-card text-foreground">
-                    Bank Transfer (CBE/Telebirr)
+                    {t("modal_payment_bank")}
                   </option>
                   <option value="CASH" className="bg-card text-foreground">
-                    Cash on Delivery
+                    {t("modal_payment_cash")}
                   </option>
                   <option value="CHEQUE" className="bg-card text-foreground">
-                    Bank CPO / Cheque
+                    {t("modal_payment_cpo")}
                   </option>
                   <option value="LETTER_OF_CREDIT" className="bg-card text-foreground">
-                    Letter of Credit (LC)
+                    {t("modal_payment_lc")}
                   </option>
                 </select>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="req-date" className="text-xs font-semibold">
-                  {t("buyer_enquiry_date")}
+                  {t("modal_required_date_label")}
                 </Label>
                 <Input
                   id="req-date"
@@ -393,11 +401,11 @@ export function PurchaseRequestModal({
             {/* Special Notes & Specs */}
             <div className="space-y-1.5">
               <Label htmlFor="req-notes" className="text-xs font-semibold">
-                {t("buyer_enquiry_notes")}
+                {t("modal_notes_label")}
               </Label>
               <Textarea
                 id="req-notes"
-                placeholder={t("buyer_enquiry_notes_placeholder")}
+                placeholder={t("modal_notes_placeholder")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="text-xs resize-none h-16"
@@ -419,11 +427,11 @@ export function PurchaseRequestModal({
                 onClick={onClose}
                 disabled={isPending}
               >
-                Cancel
+                {locale === "am" ? "ሰርዝ" : "Cancel"}
               </Button>
               <Button type="submit" size="sm" disabled={isPending} className="gap-2 font-semibold">
                 <SendHorizontal className="h-4 w-4" />
-                {isPending ? t("buyer_enquiry_submitting") : t("buyer_enquiry_submit")}
+                {isPending ? t("modal_submitting") : t("modal_submit_btn")}
               </Button>
             </div>
           </form>

@@ -166,7 +166,11 @@ export function SellerEnquiriesView({
         setEnquiries((prev) =>
           prev.map((item) => (item.id === enquiryId ? { ...item, status: "COMPLETED" } : item))
         );
-        setSuccessMsg("Deal marked as completed.");
+        setSuccessMsg(
+          locale === "am"
+            ? "ግብይቱ በተሳካ ሁኔታ መጠናቀቁ ተረጋግጧል።"
+            : "Deal marked as completed."
+        );
       } else {
         setErrorMsg(res.error || "Failed to update deal status.");
       }
@@ -190,7 +194,11 @@ export function SellerEnquiriesView({
         );
         setFailModalEnquiry(null);
         setFailNotes("");
-        setSuccessMsg("Deal reported failed. 80% refund credited to your wallet.");
+        setSuccessMsg(
+          locale === "am"
+            ? "ግብይቱ እንዳልተሳካ ተመዝግቧል። 80% ተመላሽ ወደ ዋሌትዎ ገቢ ተደርጓል።"
+            : "Deal reported failed. 80% refund credited to your wallet."
+        );
       } else {
         setErrorMsg(res.error || "Failed to process refund.");
       }
@@ -585,7 +593,7 @@ export function SellerEnquiriesView({
             {/* Wallet Burn Breakdown */}
             <div className="rounded-lg border bg-muted/40 p-3.5 space-y-2 text-xs">
               <div className="font-semibold text-foreground pb-1 border-b">
-                Wallet Deduction Breakdown
+                {locale === "am" ? "የዋሌት ክፍያ ዝርዝር" : "Wallet Deduction Breakdown"}
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("enquiry_fee_burn_credit")}</span>
@@ -615,7 +623,7 @@ export function SellerEnquiriesView({
                 onClick={() => setActionEnquiry(null)}
                 disabled={isPending}
               >
-                Cancel
+                {t("btn_cancel")}
               </Button>
               <Button
                 size="sm"
@@ -653,11 +661,12 @@ export function SellerEnquiriesView({
             <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
               <div className="font-semibold flex items-center gap-1.5 mb-1">
                 <RefreshCw className="h-4 w-4 shrink-0" />
-                80% Fee Protection Guarantee
+                {locale === "am" ? "የ 80% ተመላሽ ዋስትና" : "80% Fee Protection Guarantee"}
               </div>
               {t("enquiry_modal_fail_desc")}{" "}
               <span className="font-mono font-bold text-foreground">
-                ({formatPrice(failModalEnquiry.unlockFee * 0.8, locale)} will be credited)
+                ({formatPrice(failModalEnquiry.unlockFee * 0.8, locale)}{" "}
+                {locale === "am" ? "ወደ ዋሌትዎ ገቢ ይደረጋል" : "will be credited"})
               </span>
             </div>
 
@@ -713,7 +722,7 @@ export function SellerEnquiriesView({
                   onClick={() => setFailModalEnquiry(null)}
                   disabled={isPending}
                 >
-                  Cancel
+                  {t("btn_cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -721,7 +730,11 @@ export function SellerEnquiriesView({
                   size="sm"
                   className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold"
                 >
-                  {isPending ? "Processing Refund..." : t("enquiry_fail_submit")}
+                  {isPending
+                    ? locale === "am"
+                      ? "ተመላሽ እየተሰራ ነው..."
+                      : "Processing Refund..."
+                    : t("enquiry_fail_submit")}
                 </Button>
               </div>
             </form>

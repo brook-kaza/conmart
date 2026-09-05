@@ -294,7 +294,7 @@ export function SellerWalletView({ initialData }: SellerWalletViewProps) {
                   </div>
                 </div>
                 <Badge variant="outline" className="border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/10 font-medium">
-                  Verifying
+                  {t("wallet_verifying_badge")}
                 </Badge>
               </div>
             ))}
@@ -310,7 +310,7 @@ export function SellerWalletView({ initialData }: SellerWalletViewProps) {
             {t("wallet_history_title")}
           </CardTitle>
           <CardDescription>
-            Immutable transaction record for introduction fee deductions, refunds, and top-ups.
+            {t("wallet_ledger_desc")}
           </CardDescription>
         </CardHeader>
 
@@ -327,9 +327,9 @@ export function SellerWalletView({ initialData }: SellerWalletViewProps) {
                     <th className="py-3 px-4">{t("wallet_col_date")}</th>
                     <th className="py-3 px-4">{t("wallet_col_type")}</th>
                     <th className="py-3 px-4">{t("wallet_col_amount")}</th>
-                    <th className="py-3 px-4">Description</th>
+                    <th className="py-3 px-4">{t("wallet_col_desc")}</th>
                     <th className="py-3 px-4">{t("wallet_col_reference")}</th>
-                    <th className="py-3 px-4 text-right">Cash / Credit After</th>
+                    <th className="py-3 px-4 text-right">{t("wallet_col_balance_after")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60 font-sans">
@@ -455,7 +455,7 @@ export function SellerWalletView({ initialData }: SellerWalletViewProps) {
               <div className="rounded-lg border bg-muted/40 p-3.5 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-muted-foreground">
-                    {selectedMethod === "TELEBIRR" ? "ConMart Telebirr Merchant" : "ConMart CBE Account"}
+                    {selectedMethod === "TELEBIRR" ? t("wallet_telebirr_label") : t("wallet_cbe_label")}
                   </span>
                   <button
                     type="button"
@@ -470,12 +470,12 @@ export function SellerWalletView({ initialData }: SellerWalletViewProps) {
                     {copiedAccount === selectedMethod ? (
                       <>
                         <Check className="h-3.5 w-3.5 text-emerald-600" />
-                        <span className="text-emerald-600">Copied!</span>
+                        <span className="text-emerald-600">{t("wallet_copied_badge")}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="h-3.5 w-3.5" />
-                        <span>Copy</span>
+                        <span>{t("wallet_copy_btn")}</span>
                       </>
                     )}
                   </button>
@@ -566,7 +566,7 @@ export function SellerWalletView({ initialData }: SellerWalletViewProps) {
                   onClick={() => setIsTopUpOpen(false)}
                   disabled={isPending}
                 >
-                  Cancel
+                  {t("btn_cancel")}
                 </Button>
                 <Button type="submit" disabled={isPending} className="gap-2 font-semibold">
                   {isPending ? t("wallet_submitting") : t("wallet_submit_topup")}

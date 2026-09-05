@@ -203,14 +203,14 @@ function roundToTwoDecimals(value: number): number {
  *
  * @param qty - Requested quantity
  * @param unitPrice - Per-unit price from the selected tier
- * @param platformFeePercent - Platform fee percentage (default 10)
+ * @param platformFeePercent - Platform fee percentage (default 0 under contact-unlock model)
  * @param vatRatePercent - VAT rate percentage (default 15)
  * @returns Preview breakdown object
  */
 export function calculateProformaPreview(
   qty: number,
   unitPrice: number,
-  platformFeePercent: number = 10,
+  platformFeePercent: number = 0,
   vatRatePercent: number = 15
 ): {
   baseSubtotal: number;

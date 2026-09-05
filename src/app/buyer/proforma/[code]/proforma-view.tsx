@@ -267,10 +267,12 @@ export function ProformaView({ order, adminPhone }: ProformaViewProps) {
             <span>{t("proforma_subtotal_base")}</span>
             <span>{formatETB(order.baseSubtotal, locale)}</span>
           </div>
-          <div className="flex justify-between text-muted-foreground">
-            <span>{t("proforma_platform_fee")}</span>
-            <span>{formatETB(order.platformFee, locale)}</span>
-          </div>
+          {order.platformFee > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>{t("proforma_platform_fee")}</span>
+              <span>{formatETB(order.platformFee, locale)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-muted-foreground">
             <span>{t("proforma_vat")}</span>
             <span>{formatETB(order.tax, locale)}</span>

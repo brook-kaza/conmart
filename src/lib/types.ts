@@ -128,18 +128,17 @@ export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus | null> =
 
 /**
  * Platform fee percentage — read from environment variable at runtime.
- * Falls back to 10% if not configured.
+ * Defaults to 0% under the prepaid contact-unlock trading model
+ * (revenue is generated strictly via seller wallet introduction unlock fees).
  */
 export function getPlatformFeePercent(): number {
   const envValue = process.env.PLATFORM_FEE_PERCENT;
   if (envValue === undefined || envValue === "") {
-    return 10;
+    return 0;
   }
   const parsed = parseFloat(envValue);
   if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
-    throw new Error(
-      `Invalid PLATFORM_FEE_PERCENT: "${envValue}". Must be a number between 0 and 100.`
-    );
+    return 0;
   }
   return parsed;
 }

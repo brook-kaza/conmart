@@ -24,6 +24,8 @@ import {
 import { generateProformaSchema, updateOrderStatusSchema } from "@/lib/validations";
 import {
   ORDER_STATUS_TRANSITIONS,
+  getPlatformFeePercent,
+  getVatRatePercent,
   type ActionResult,
   type OrderStatus,
 } from "@/lib/types";
@@ -121,8 +123,8 @@ export async function generateProformaAction(
 
       // Re-run precise calculations
       const unitPrice = Number(matchingTier.unitPrice);
-      const feePercent = 10;
-      const vatPercent = 15;
+      const feePercent = getPlatformFeePercent();
+      const vatPercent = getVatRatePercent();
       const baseSubtotal =
         Math.round(Number((parsed.data.qty * unitPrice).toFixed(6)) * 100) / 100;
       const platformFee =
@@ -286,8 +288,8 @@ export async function generateMultiItemProformaAction(
       }
 
       totalBaseSubtotal = Math.round(totalBaseSubtotal * 100) / 100;
-      const feePercent = 10;
-      const vatPercent = 15;
+      const feePercent = getPlatformFeePercent();
+      const vatPercent = getVatRatePercent();
       const platformFee =
         Math.round(Number((totalBaseSubtotal * (feePercent / 100)).toFixed(6)) * 100) /
         100;

@@ -260,10 +260,12 @@ export function CartDrawer() {
                 <span>{t("cart_base_subtotal")}</span>
                 <span className="font-medium text-foreground">{formatETB(baseSubtotal, locale)}</span>
               </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>{t("cart_fee")}</span>
-                <span>{formatETB(platformFee, locale)}</span>
-              </div>
+              {platformFee > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t("cart_fee")}</span>
+                  <span>{formatETB(platformFee, locale)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-muted-foreground">
                 <span>{t("cart_vat")}</span>
                 <span>{formatETB(tax, locale)}</span>

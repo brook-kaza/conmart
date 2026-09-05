@@ -138,9 +138,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const calculations = useMemo(() => {
     const baseSubtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-    const platformFee = Math.round(baseSubtotal * 0.1 * 100) / 100;
-    const tax = Math.round((baseSubtotal + platformFee) * 0.15 * 100) / 100;
-    const grandTotal = Math.round((baseSubtotal + platformFee + tax) * 100) / 100;
+    const platformFee = 0; // 0% platform fee under contact-unlock model
+    const tax = Math.round(baseSubtotal * 0.15 * 100) / 100;
+    const grandTotal = Math.round((baseSubtotal + tax) * 100) / 100;
 
     const uniqueDepots = new Set(items.map((i) => i.depotCode));
 

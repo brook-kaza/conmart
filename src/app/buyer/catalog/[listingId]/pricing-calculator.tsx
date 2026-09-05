@@ -253,12 +253,14 @@ export function PricingCalculator({
                       {formatETB(preview.baseSubtotal, locale)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>{t("cart_fee")}</span>
-                    <span>
-                      {formatETB(preview.platformFee, locale)}
-                    </span>
-                  </div>
+                  {preview.platformFee > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>{t("cart_fee")}</span>
+                      <span>
+                        {formatETB(preview.platformFee, locale)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-muted-foreground">
                     <span>{t("cart_vat")}</span>
                     <span>

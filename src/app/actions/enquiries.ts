@@ -111,6 +111,14 @@ export async function submitPurchaseEnquiryAction(data: {
   const sanitizedAddress = filterLeakedContactText(data.deliveryAddress);
   const sanitizedConstraints = filterLeakedContactText(data.accessConstraints);
 
+  let safeRequiredDate: Date | undefined = undefined;
+  if (data.requiredDate) {
+    const d = new Date(data.requiredDate);
+    if (!isNaN(d.getTime())) {
+      safeRequiredDate = d;
+    }
+  }
+
   const enquiry = await db.enquiry.create({
     data: {
       referenceCode,
@@ -123,7 +131,7 @@ export async function submitPurchaseEnquiryAction(data: {
       deliveryPreference: data.deliveryPreference || DeliveryPreference.SELLER_DELIVERED,
       deliveryAddress: sanitizedAddress,
       accessConstraints: sanitizedConstraints,
-      requiredDate: data.requiredDate ? new Date(data.requiredDate) : undefined,
+      requiredDate: safeRequiredDate,
       status: EnquiryStatus.PENDING,
     },
   });
@@ -276,23 +284,21 @@ export async function reportDealOutcomeAction({
       data: { status: EnquiryStatus.FAILED },
     });
 
-    // Increment seller failed deal counter and check automatic quality threshold
-    const updatedProfile = await db.sellerProfile.upsert({
-      where: { userId: enquiry.sellerId },
-      update: { failedDealsCount: { increment: 1 } },
-      create: { userId: enquiry.sellerId, failedDealsCount: 1 },
-    });
-
     // Automatic Suspension Rule (Guide Section 9 & 25):
     // If seller has >= 4 failed deals and failure rate exceeds 60%, automatically suspend
-    const totalDeals = updatedProfile.completedDealsCount + updatedProfile.failedDealsCount;
-    if (updatedProfile.failedDealsCount >= 4 && totalDeals > 0) {
-      const failureRate = updatedProfile.failedDealsCount / totalDeals;
-      if (failureRate > 0.6) {
-        await db.sellerProfile.update({
-          where: { id: updatedProfile.id },
-          data: { verificationStatus: "SUSPENDED" },
-        });
+    const updatedProfile = await db.sellerProfile.findUnique({
+      where: { userId: enquiry.sellerId },
+    });
+    if (updatedProfile && updatedProfile.failedDealsCount >= 4) {
+      const totalDeals = updatedProfile.completedDealsCount + updatedProfile.failedDealsCount;
+      if (totalDeals > 0) {
+        const failureRate = updatedProfile.failedDealsCount / totalDeals;
+        if (failureRate > 0.6) {
+          await db.sellerProfile.update({
+            where: { id: updatedProfile.id },
+            data: { verificationStatus: "SUSPENDED" },
+          });
+        }
       }
     }
 

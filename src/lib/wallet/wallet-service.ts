@@ -403,3 +403,37 @@ export async function approveTopUpRequest({
     };
   });
 }
+
+/**
+ * Admin rejects a top-up request.
+ */
+export async function rejectTopUpRequest({
+  topUpId,
+  adminUserId,
+  reason,
+}: {
+  topUpId: string;
+  adminUserId: string;
+  reason?: string;
+}) {
+  const topUp = await db.topUpRequest.findUnique({
+    where: { id: topUpId },
+  });
+
+  if (!topUp) {
+    throw new Error("Top-up request not found.");
+  }
+
+  if (topUp.status !== WalletTxStatus.PENDING) {
+    throw new Error(`Top-up request is already ${topUp.status}`);
+  }
+
+  return await db.topUpRequest.update({
+    where: { id: topUpId },
+    data: {
+      status: WalletTxStatus.FAILED,
+      reviewedBy: adminUserId,
+      reviewedAt: new Date(),
+    },
+  });
+}

@@ -13,6 +13,7 @@ import {
   getOrCreateSellerWallet,
   submitWalletTopUpRequest,
   approveTopUpRequest,
+  rejectTopUpRequest,
 } from "@/lib/wallet/wallet-service";
 import { PaymentMethod, WalletTxStatus } from "@prisma/client";
 
@@ -141,6 +142,36 @@ export async function approveTopUpAction(topUpId: string) {
     return { success: true, data: result };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to approve top-up";
+    return { success: false, error: message };
+  }
+}
+
+export async function rejectTopUpAction(topUpId: string, reason?: string) {
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const admin = await db.user.findUnique({
+    where: { authId: authUser.id },
+  });
+
+  if (!admin || admin.role !== "ADMIN") {
+    return { success: false, error: "Only administrators can reject wallet top-ups." };
+  }
+
+  try {
+    const result = await rejectTopUpRequest({
+      topUpId,
+      adminUserId: admin.id,
+      reason,
+    });
+
+    revalidatePath("/admin/command-center");
+    revalidatePath("/seller/wallet");
+    return { success: true, data: result };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to reject top-up";
     return { success: false, error: message };
   }
 }

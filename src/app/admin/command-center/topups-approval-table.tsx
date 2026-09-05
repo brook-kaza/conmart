@@ -17,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/i18n/translations";
-import { approveTopUpAction } from "@/app/actions/wallet";
+import { approveTopUpAction, rejectTopUpAction } from "@/app/actions/wallet";
 
 export interface PendingTopUpItem {
   id: string;
@@ -53,6 +53,21 @@ export function TopUpsApprovalTable({ initialTopUps }: TopUpsApprovalTableProps)
         setSuccessMsg("Top-up request approved and seller cash balance credited.");
       } else {
         setErrorMsg(res.error || "Failed to approve top-up.");
+      }
+    });
+  };
+
+  const handleReject = (topUpId: string) => {
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    startTransition(async () => {
+      const res = await rejectTopUpAction(topUpId, "Verification failed or invalid deposit proof");
+      if (res.success) {
+        setTopUps((prev) => prev.filter((t) => t.id !== topUpId));
+        setSuccessMsg("Top-up deposit request has been rejected.");
+      } else {
+        setErrorMsg(res.error || "Failed to reject top-up.");
       }
     });
   };
@@ -156,15 +171,26 @@ export function TopUpsApprovalTable({ initialTopUps }: TopUpsApprovalTableProps)
                       )}
                     </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(t.id)}
-                        disabled={isPending}
-                        className="gap-1 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        Approve Deposit
-                      </Button>
+                      <div className="inline-flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReject(t.id)}
+                          disabled={isPending}
+                          className="h-8 gap-1 text-xs font-medium text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleApprove(t.id)}
+                          disabled={isPending}
+                          className="h-8 gap-1 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          Approve Deposit
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

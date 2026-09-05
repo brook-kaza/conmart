@@ -108,6 +108,8 @@ export async function updateSellerVerificationAction({
 
   revalidatePath("/admin/command-center");
   revalidatePath("/seller/dashboard");
+  revalidatePath("/buyer", "layout");
+  revalidatePath("/buyer/catalog");
   revalidatePath("/buyer/category/all");
 
   return { success: true };

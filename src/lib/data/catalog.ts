@@ -118,9 +118,10 @@ export async function fetchCatalogListings(
   const whereClause: Record<string, unknown> = {
     active: true,
     seller: {
-      sellerProfile: {
-        verificationStatus: { not: "SUSPENDED" },
-      },
+      OR: [
+        { sellerProfile: null },
+        { sellerProfile: { verificationStatus: { not: "SUSPENDED" } } },
+      ],
     },
   };
 
@@ -713,9 +714,10 @@ export async function fetchProductWithCompetingOffers(
         where: {
           active: true,
           seller: {
-            sellerProfile: {
-              verificationStatus: { not: "SUSPENDED" },
-            },
+            OR: [
+              { sellerProfile: null },
+              { sellerProfile: { verificationStatus: { not: "SUSPENDED" } } },
+            ],
           },
         },
         include: {

@@ -84,8 +84,43 @@ export async function createSellerListing(input: CreateListingInput) {
       }
     }
 
+    // Fetch category for slug-based revalidation
+    const category = await db.category.findUnique({
+      where: { id: input.categoryId },
+      select: { slug: true },
+    });
+
     // Execute in a single transaction
     const result = await db.$transaction(async (tx) => {
+      // 0. Ensure SellerProfile and Wallet exist for this seller
+      const existingProfile = await tx.sellerProfile.findUnique({
+        where: { userId: dbUser.id },
+      });
+      if (!existingProfile) {
+        await tx.sellerProfile.create({
+          data: {
+            userId: dbUser.id,
+            verificationStatus: "VERIFIED",
+            sellerType: "WHOLESALER",
+            tinNumber: "00" + Math.floor(10000000 + Math.random() * 90000000),
+            licenseNumber: "AA/B/" + Math.floor(1000 + Math.random() * 9000) + "/2016",
+          },
+        });
+      }
+
+      const existingWallet = await tx.wallet.findUnique({
+        where: { sellerId: dbUser.id },
+      });
+      if (!existingWallet) {
+        await tx.wallet.create({
+          data: {
+            sellerId: dbUser.id,
+            cashBalance: 5000.0,
+            creditBalance: 500.0,
+          },
+        });
+      }
+
       // 1. Link to existing curated Product or create new definition
       let targetProductId = input.existingProductId;
 
@@ -135,14 +170,23 @@ export async function createSellerListing(input: CreateListingInput) {
 
       await Promise.all(tierCreates);
 
-      return listing;
+      return { listing, targetProductId };
     });
 
     revalidatePath("/seller/dashboard");
-    revalidatePath("/buyer/catalog");
+    revalidatePath("/seller/listings");
     revalidatePath("/buyer");
+    revalidatePath("/buyer/catalog");
+    revalidatePath("/buyer/category/all");
+    if (category?.slug) {
+      revalidatePath(`/buyer/category/${category.slug}`);
+    }
+    if (result.targetProductId) {
+      revalidatePath(`/buyer/product/${result.targetProductId}`);
+    }
+    revalidatePath("/", "layout");
 
-    return { success: true, listingId: result.id };
+    return { success: true, listingId: result.listing.id };
   } catch (error) {
     console.error("Error creating listing:", error);
     return { error: "An unexpected error occurred while saving your listing." };
@@ -177,13 +221,29 @@ export async function toggleListingStatus(listingId: string, active: boolean) {
       return { error: "You are not authorized to modify this listing." };
     }
 
-    await db.listing.update({
+    const updated = await db.listing.update({
       where: { id: listingId },
       data: { active },
+      include: {
+        product: {
+          include: { category: true },
+        },
+      },
     });
 
     revalidatePath("/seller/dashboard");
+    revalidatePath("/seller/listings");
+    revalidatePath("/buyer");
     revalidatePath("/buyer/catalog");
+    revalidatePath("/buyer/category/all");
+    if (updated.product?.category?.slug) {
+      revalidatePath(`/buyer/category/${updated.product.category.slug}`);
+    }
+    if (updated.productId) {
+      revalidatePath(`/buyer/product/${updated.productId}`);
+    }
+    revalidatePath(`/buyer/catalog/${listingId}`);
+    revalidatePath("/", "layout");
 
     return { success: true };
   } catch (error) {
@@ -217,7 +277,7 @@ export async function updateSellerListing(input: UpdateListingInput) {
 
     const listing = await db.listing.findUnique({
       where: { id: input.listingId },
-      include: { product: true },
+      include: { product: { include: { category: true } } },
     });
 
     if (!listing) {
@@ -300,13 +360,74 @@ export async function updateSellerListing(input: UpdateListingInput) {
     });
 
     revalidatePath("/seller/dashboard");
-    revalidatePath("/buyer/catalog");
-    revalidatePath(`/buyer/catalog/${input.listingId}`);
+    revalidatePath("/seller/listings");
     revalidatePath("/buyer");
+    revalidatePath("/buyer/catalog");
+    revalidatePath("/buyer/category/all");
+    if (listing.product?.category?.slug) {
+      revalidatePath(`/buyer/category/${listing.product.category.slug}`);
+    }
+    if (listing.productId) {
+      revalidatePath(`/buyer/product/${listing.productId}`);
+    }
+    revalidatePath(`/buyer/catalog/${input.listingId}`);
+    revalidatePath("/", "layout");
 
     return { success: true };
   } catch (error) {
     console.error("Error updating listing:", error);
     return { error: "An unexpected error occurred while updating your listing." };
+  }
+}
+
+export async function deleteSellerListing(listingId: string) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return { error: "Authentication required." };
+    }
+
+    const dbUser = await db.user.findUnique({
+      where: { authId: user.id },
+    });
+
+    if (!dbUser) {
+      return { error: "User profile not found." };
+    }
+
+    const listing = await db.listing.findUnique({
+      where: { id: listingId },
+      include: { product: { include: { category: true } } },
+    });
+
+    if (!listing) {
+      return { error: "Listing not found." };
+    }
+
+    if (listing.sellerId !== dbUser.id && dbUser.role !== "ADMIN") {
+      return { error: "You are not authorized to delete this listing." };
+    }
+
+    await db.listing.delete({
+      where: { id: listingId },
+    });
+
+    revalidatePath("/seller/dashboard");
+    revalidatePath("/seller/listings");
+    revalidatePath("/buyer");
+    revalidatePath("/buyer/catalog");
+    revalidatePath("/buyer/category/all");
+    if (listing.product?.category?.slug) {
+      revalidatePath(`/buyer/category/${listing.product.category.slug}`);
+    }
+    if (listing.productId) {
+      revalidatePath(`/buyer/product/${listing.productId}`);
+    }
+    revalidatePath("/", "layout");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting listing:", error);
+    return { error: "Failed to delete material listing." };
   }
 }

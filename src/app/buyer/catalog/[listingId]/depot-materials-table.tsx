@@ -1,0 +1,224 @@
+// =============================================================================
+// ConMart — Depot Available Materials Table (Client Component)
+// =============================================================================
+// Displays all other active materials stocked at the current seller's depot yard.
+// Allows buyers to bundle multiple products from the same physical location
+// into their Proforma Cart to optimize Sino-truck / Isuzu freight logistics.
+// Fully bilingual English & Amharic.
+// =============================================================================
+
+"use client";
+
+import Link from "next/link";
+import {
+  Building2,
+  MapPin,
+  Truck,
+  Plus,
+  ArrowRight,
+  Sparkles,
+  Package,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatETB } from "@/lib/types";
+import { useCart } from "@/lib/cart/cart-context";
+import { useLanguage } from "@/lib/i18n/language-context";
+import {
+  getCategoryTitle,
+  getLocalizedUnit,
+  getLocalizedLocation,
+} from "@/lib/i18n/translations";
+import type { CatalogListing } from "@/lib/data/catalog";
+
+interface DepotMaterialsTableProps {
+  depotName: string;
+  location: string;
+  listings: CatalogListing[];
+}
+
+export function DepotMaterialsTable({
+  depotName,
+  location,
+  listings,
+}: DepotMaterialsTableProps) {
+  const { addItem } = useCart();
+  const { t, locale } = useLanguage();
+
+  if (listings.length === 0) {
+    return null;
+  }
+
+  const handleQuickAdd = (item: CatalogListing) => {
+    if (!item.lowestPrice) return;
+    const unitLabel = getLocalizedUnit(item.product.unit, locale);
+    const defaultQty = 100; // sensible default or min
+    addItem({
+      listingId: item.id,
+      sellerId: item.seller.id,
+      depotCode: item.seller.companyName,
+      location: item.location,
+      productTitle: item.product.title,
+      unit: unitLabel,
+      imageUrl: item.imageUrl,
+      qty: defaultQty,
+      unitPrice: item.lowestPrice,
+      subtotal: defaultQty * item.lowestPrice,
+      minQty: 1,
+      maxQty: 100000,
+    });
+  };
+
+  const localizedLocation = getLocalizedLocation(location, locale);
+
+  return (
+    <Card className="border-primary/30 bg-card/80 shadow-md">
+      <CardHeader className="border-b border-border/50 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Building2 className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base font-bold text-foreground">
+                {t("depot_other_materials")}
+              </CardTitle>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
+              <span>{depotName}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-amber-500" />
+                {localizedLocation}
+              </span>
+            </p>
+          </div>
+
+          <Badge className="bg-emerald-600/90 hover:bg-emerald-600 text-white text-xs font-semibold py-1 px-3 gap-1.5 self-start sm:self-auto">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{t("depot_freight_advantage")}</span>
+          </Badge>
+        </div>
+
+        {/* Logistics Callout */}
+        <div className="mt-3 rounded-lg border border-border/40 bg-muted/30 p-2.5 text-xs text-muted-foreground flex items-center gap-2">
+          <Truck className="h-4 w-4 text-primary shrink-0" />
+          <span>{t("depot_bundle_callout")}</span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/20">
+                <TableHead className="text-xs font-semibold">{t("depot_col_material")}</TableHead>
+                <TableHead className="text-xs font-semibold">{t("depot_col_category")}</TableHead>
+                <TableHead className="text-xs font-semibold">{t("depot_col_wholesale_price")}</TableHead>
+                <TableHead className="text-xs font-semibold text-right">{t("depot_col_actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {listings.map((item) => {
+                const unitLabel = getLocalizedUnit(item.product.unit, locale);
+                const itemCategory = getCategoryTitle(
+                  item.product.category.slug,
+                  item.product.category.name,
+                  locale
+                );
+
+                return (
+                  <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border/60 bg-muted">
+                          {item.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.imageUrl}
+                              alt={item.product.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                              <Package className="h-4 w-4" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <Link
+                            href={`/buyer/catalog/${item.id}`}
+                            className="font-semibold text-xs text-foreground hover:text-primary transition-colors line-clamp-1"
+                          >
+                            {item.product.title}
+                          </Link>
+                          {item.product.specs && Object.keys(item.product.specs).length > 0 && (
+                            <p className="text-[11px] text-muted-foreground line-clamp-1">
+                              {Object.entries(item.product.specs)
+                                .slice(0, 2)
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join(" · ")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-xs">
+                      <Badge variant="outline" className="text-[10px]">
+                        {itemCategory}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell>
+                      {item.lowestPrice ? (
+                        <div>
+                          <span className="font-bold text-xs text-foreground">
+                            {formatETB(item.lowestPrice, locale)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground ml-1">
+                            /{unitLabel}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">{t("depot_price_on_request")}</span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-8 text-xs font-semibold gap-1"
+                          onClick={() => handleQuickAdd(item)}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">{t("depot_btn_add_cart")}</span>
+                        </Button>
+                        <Link href={`/buyer/catalog/${item.id}`}>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="View details">
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

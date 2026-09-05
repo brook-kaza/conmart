@@ -1,0 +1,483 @@
+// =============================================================================
+// ConMart — Prisma Schema (Contact-Unlock & Introduction Trading Platform)
+// =============================================================================
+// Database schema for the construction materials trading platform (Addis Ababa).
+// Implements prepaid seller wallet, category-based introduction unlock fees,
+// pre-unlock masking protection, purchase enquiries, and dispute handling.
+// All table/column names use snake_case mapping for PostgreSQL conventions.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+/// User roles in the marketplace.
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+  FIELD_AGENT
+
+  @@map("user_role")
+}
+
+/// Seller organizational tier / type.
+enum SellerType {
+  FACTORY
+  IMPORTER
+  WHOLESALER
+  RETAILER
+  RENTAL
+
+  @@map("seller_type")
+}
+
+/// Seller onboarding document and compliance verification status.
+enum SellerVerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  SUSPENDED
+
+  @@map("seller_verification_status")
+}
+
+/// Standard construction material units of measure (Strictly validated).
+enum ProductUnit {
+  BAG
+  QUINTAL
+  TON
+  PIECE
+  M3
+
+  @@map("product_unit")
+}
+
+/// Order lifecycle state machine (preserved for existing orders).
+enum OrderStatus {
+  GENERATED
+  CALL_RECEIVED
+  PROCURED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+
+  @@map("order_status")
+}
+
+/// Enquiry / Purchase Request lifecycle state machine.
+enum EnquiryStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  COMPLETED
+  FAILED
+  DISPUTED
+
+  @@map("enquiry_status")
+}
+
+/// Delivery logistics preference selected by buyer.
+enum DeliveryPreference {
+  SELLER_DELIVERED
+  SELF_COLLECT
+  PLATFORM_ARRANGED
+
+  @@map("delivery_preference")
+}
+
+/// Delivery pricing structure.
+enum DeliveryPriceType {
+  EX_WORKS
+  DELIVERED
+
+  @@map("delivery_price_type")
+}
+
+/// Stock availability state.
+enum StockState {
+  IN_STOCK
+  LIMITED
+  ON_ORDER
+
+  @@map("stock_state")
+}
+
+/// Wallet transaction types.
+enum WalletTxType {
+  TOP_UP
+  UNLOCK_FEE
+  REFUND_CREDIT
+  ADJUSTMENT
+
+  @@map("wallet_tx_type")
+}
+
+/// Wallet transaction status.
+enum WalletTxStatus {
+  PENDING
+  COMPLETED
+  FAILED
+
+  @@map("wallet_tx_status")
+}
+
+/// Local Ethiopian payment methods for wallet deposits.
+enum PaymentMethod {
+  TELEBIRR
+  CBE_BANK
+  AWASH_BANK
+  CASH_DEPOSIT
+
+  @@map("payment_method")
+}
+
+/// Reported deal outcome.
+enum OutcomeType {
+  SUCCESS
+  FAILURE
+  PENDING
+
+  @@map("outcome_type")
+}
+
+/// Unlock record refund status.
+enum RefundStatus {
+  NONE
+  REQUESTED
+  REFUNDED_CREDIT
+  DISPUTED
+  REJECTED
+
+  @@map("refund_status")
+}
+
+/// Dispute claim categories.
+enum DisputeClaimType {
+  SHORTAGE
+  DAMAGE
+  WRONG_SPECIFICATION
+  NON_DELIVERY
+  NON_PAYMENT
+
+  @@map("dispute_claim_type")
+}
+
+/// Dispute resolution status.
+enum DisputeStatus {
+  OPEN
+  MEDIATING
+  RESOLVED_SELLER_CREDIT
+  RESOLVED_NO_REFUND
+  CLOSED
+
+  @@map("dispute_status")
+}
+
+// =============================================================================
+// MODELS
+// =============================================================================
+
+/// Platform user. Linked 1:1 with Supabase Auth via `auth_id`.
+model User {
+  id          String   @id @default(cuid())
+  authId      String   @unique @map("auth_id")
+  role        UserRole
+  name        String
+  phone       String
+  companyName String   @map("company_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // --- Relations ---
+  sellerProfile    SellerProfile?
+  wallet           Wallet?
+  sellerListings   Listing[]       @relation("SellerListings")
+  buyerOrders      Order[]         @relation("BuyerOrders")
+  sellerOrders     Order[]         @relation("SellerOrders")
+  sellerOrderItems OrderItem[]     @relation("SellerOrderItems")
+  sellerEnquiries  Enquiry[]       @relation("SellerEnquiries")
+  buyerEnquiries   Enquiry[]       @relation("BuyerEnquiries")
+  agentEnquiries   Enquiry[]       @relation("AgentEnquiries")
+  topUpRequests    TopUpRequest[]
+  buyerUnlocks     UnlockRecord[]  @relation("BuyerUnlocks")
+  sellerUnlocks    UnlockRecord[]  @relation("SellerUnlocks")
+
+  @@map("users")
+}
+
+/// Detailed seller profile storing verification, business licenses, and metrics.
+model SellerProfile {
+  id                     String                   @id @default(cuid())
+  userId                 String                   @unique @map("user_id")
+  user                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sellerType             SellerType               @default(RETAILER) @map("seller_type")
+  verificationStatus     SellerVerificationStatus @default(UNVERIFIED) @map("verification_status")
+  licenseNumber          String?                  @map("license_number")
+  tinNumber              String?                  @map("tin_number")
+  vatNumber              String?                  @map("vat_number")
+  vatRegistered          Boolean                  @default(false) @map("vat_registered")
+  licenseExpiry          DateTime?                @map("license_expiry")
+  tinExpiry              DateTime?                @map("tin_expiry")
+  responseTimeAvgMinutes Int                      @default(60) @map("response_time_avg_minutes")
+  completedDealsCount    Int                      @default(0) @map("completed_deals_count")
+  failedDealsCount       Int                      @default(0) @map("failed_deals_count")
+  createdAt              DateTime                 @default(now()) @map("created_at")
+  updatedAt              DateTime                 @updatedAt @map("updated_at")
+
+  @@map("seller_profiles")
+}
+
+/// Seller in-app prepaid wallet for contact unlock fees and refund credits.
+model Wallet {
+  id            String   @id @default(cuid())
+  sellerId      String   @unique @map("seller_id")
+  seller        User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  cashBalance   Decimal  @default(0.00) @map("cash_balance") @db.Decimal(12, 2)
+  creditBalance Decimal  @default(0.00) @map("credit_balance") @db.Decimal(12, 2)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // --- Relations ---
+  transactions WalletTransaction[]
+  topUps       TopUpRequest[]
+
+  @@map("wallets")
+}
+
+/// Immutable ledger of all wallet activities.
+model WalletTransaction {
+  id                 String         @id @default(cuid())
+  walletId           String         @map("wallet_id")
+  wallet             Wallet         @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount             Decimal        @db.Decimal(12, 2)
+  type               WalletTxType
+  status             WalletTxStatus @default(COMPLETED)
+  reference          String
+  description        String
+  balanceAfterCash   Decimal        @map("balance_after_cash") @db.Decimal(12, 2)
+  balanceAfterCredit Decimal        @map("balance_after_credit") @db.Decimal(12, 2)
+  createdAt          DateTime       @default(now()) @map("created_at")
+
+  @@map("wallet_transactions")
+}
+
+/// Offline or mobile money top-up request submitted by seller.
+model TopUpRequest {
+  id            String         @id @default(cuid())
+  sellerId      String         @map("seller_id")
+  seller        User           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  walletId      String         @map("wallet_id")
+  wallet        Wallet         @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount        Decimal        @db.Decimal(12, 2)
+  paymentMethod PaymentMethod  @default(TELEBIRR) @map("payment_method")
+  referenceCode String         @map("reference_code")
+  slipUrl       String?        @map("slip_url")
+  status        WalletTxStatus @default(PENDING)
+  reviewedBy    String?        @map("reviewed_by")
+  reviewedAt    DateTime?      @map("reviewed_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  @@map("top_up_requests")
+}
+
+/// Material category (9 official groups). Features data-driven attributes,
+/// an enable/disable switch, and category-specific introduction unlock fee.
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  iconName    String   @map("icon_name")
+  imageUrl    String?  @map("image_url")
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  unlockFee   Decimal  @default(250.00) @map("unlock_fee") @db.Decimal(12, 2)
+  sortOrder   Int      @default(0) @map("sort_order")
+  attributes  Json?    @default("[]")
+
+  // --- Relations ---
+  products Product[]
+
+  @@map("categories")
+}
+
+/// A generic product definition (e.g., "Dangote OPC 42.5R, 50kg bag").
+model Product {
+  id         String      @id @default(cuid())
+  categoryId String      @map("category_id")
+  title      String
+  unit       ProductUnit
+  imageUrl   String?     @map("image_url")
+  specs      Json        @default("{}")
+
+  // --- Relations ---
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  listings Listing[]
+
+  @@map("products")
+}
+
+/// A seller's offer to supply a specific product from a specific warehouse/depot.
+model Listing {
+  id                   String            @id @default(cuid())
+  sellerId             String            @map("seller_id")
+  productId            String            @map("product_id")
+  active               Boolean           @default(true)
+  location             String
+  imageUrl             String?           @map("image_url")
+  deliveryType         DeliveryPriceType @default(EX_WORKS) @map("delivery_type")
+  loadingIncluded      Boolean           @default(false) @map("loading_included")
+  unloadingIncluded    Boolean           @default(false) @map("unloading_included")
+  loadingCharge        Decimal?          @map("loading_charge") @db.Decimal(12, 2)
+  unloadingCharge      Decimal?          @map("unloading_charge") @db.Decimal(12, 2)
+  waitingChargePerHour Decimal?          @map("waiting_charge_per_hour") @db.Decimal(12, 2)
+  stockState           StockState        @default(IN_STOCK) @map("stock_state")
+  availableQty         Int?              @map("available_qty")
+
+  // --- Relations ---
+  seller     User        @relation("SellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceTiers PriceTier[]
+  orders     Order[]
+  orderItems OrderItem[]
+  enquiries  Enquiry[]
+
+  @@map("listings")
+}
+
+/// Volume-based pricing tier for a listing.
+model PriceTier {
+  id         String   @id @default(cuid())
+  listingId  String   @map("listing_id")
+  minQty     Int      @map("min_qty")
+  maxQty     Int      @map("max_qty")
+  unitPrice  Decimal  @map("unit_price") @db.Decimal(12, 2)
+  validUntil DateTime @map("valid_until")
+
+  // --- Relations ---
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("price_tiers")
+}
+
+/// A Buyer Purchase Request / Enquiry for a specific material offer.
+model Enquiry {
+  id                 String             @id @default(cuid())
+  referenceCode      String             @unique @map("reference_code")
+  buyerId            String             @map("buyer_id")
+  buyer              User               @relation("BuyerEnquiries", fields: [buyerId], references: [id], onDelete: Restrict)
+  sellerId           String             @map("seller_id")
+  seller             User               @relation("SellerEnquiries", fields: [sellerId], references: [id], onDelete: Restrict)
+  listingId          String             @map("listing_id")
+  listing            Listing            @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  qty                Int
+  unit               ProductUnit
+  deliveryPreference DeliveryPreference @default(SELLER_DELIVERED) @map("delivery_preference")
+  deliveryAddress    String             @map("delivery_address")
+  accessConstraints  String?            @map("access_constraints")
+  requiredDate       DateTime?          @map("required_date")
+  status             EnquiryStatus      @default(PENDING)
+  agentId            String?            @map("agent_id")
+  agent              User?              @relation("AgentEnquiries", fields: [agentId], references: [id], onDelete: SetNull)
+  createdAt          DateTime           @default(now()) @map("created_at")
+  respondedAt        DateTime?          @map("responded_at")
+
+  // --- Relations ---
+  unlockRecord UnlockRecord?
+  disputes     DisputeCase[]
+
+  @@map("enquiries")
+}
+
+/// Immutable record of the platform's core revenue event (The Introduction / Contact Unlock).
+model UnlockRecord {
+  id                    String      @id @default(cuid())
+  enquiryId             String      @unique @map("enquiry_id")
+  enquiry               Enquiry     @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  sellerId              String      @map("seller_id")
+  seller                User        @relation("SellerUnlocks", fields: [sellerId], references: [id], onDelete: Restrict)
+  buyerId               String      @map("buyer_id")
+  buyer                 User        @relation("BuyerUnlocks", fields: [buyerId], references: [id], onDelete: Restrict)
+  feeAmount             Decimal     @map("fee_amount") @db.Decimal(12, 2)
+  paidFromCash          Decimal     @default(0.00) @map("paid_from_cash") @db.Decimal(12, 2)
+  paidFromCredit        Decimal     @default(0.00) @map("paid_from_credit") @db.Decimal(12, 2)
+  unlockedAt            DateTime    @default(now()) @map("unlocked_at")
+  sellerReportedOutcome OutcomeType @default(PENDING) @map("seller_reported_outcome")
+  buyerOutcomeResponse  OutcomeType @default(PENDING) @map("buyer_outcome_response")
+  refundStatus          RefundStatus @default(NONE) @map("refund_status")
+  refundCreditAmount    Decimal?    @map("refund_credit_amount") @db.Decimal(12, 2)
+
+  // --- Relations ---
+  disputes DisputeCase[]
+
+  @@map("unlock_records")
+}
+
+/// In-platform dispute case raised by either counterparty.
+model DisputeCase {
+  id              String           @id @default(cuid())
+  enquiryId       String           @map("enquiry_id")
+  enquiry         Enquiry          @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  unlockRecordId  String           @map("unlock_record_id")
+  unlockRecord    UnlockRecord     @relation(fields: [unlockRecordId], references: [id], onDelete: Cascade)
+  raisedBy        UserRole         @map("raised_by")
+  claimType       DisputeClaimType @map("claim_type")
+  description     String
+  evidenceUrls    Json             @default("[]") @map("evidence_urls")
+  status          DisputeStatus    @default(OPEN)
+  resolutionNotes String?          @map("resolution_notes")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  resolvedAt      DateTime?        @map("resolved_at")
+
+  @@map("dispute_cases")
+}
+
+/// A Proforma Invoice / Order record (Preserved for legacy compatibility).
+model Order {
+  id            String      @id @default(cuid())
+  referenceCode String      @unique @map("reference_code")
+  buyerId       String      @map("buyer_id")
+  sellerId      String?     @map("seller_id")
+  listingId     String?     @map("listing_id")
+  qty           Int?
+  baseSubtotal  Decimal     @map("base_subtotal") @db.Decimal(12, 2)
+  platformFee   Decimal     @map("platform_fee") @db.Decimal(12, 2)
+  tax           Decimal     @db.Decimal(12, 2)
+  grandTotal    Decimal     @map("grand_total") @db.Decimal(12, 2)
+  status        OrderStatus @default(GENERATED)
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  // --- Relations ---
+  buyer   User        @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
+  seller  User?       @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Restrict)
+  listing Listing?    @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  items   OrderItem[]
+
+  @@map("orders")
+}
+
+/// Individual line item in an Order.
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String  @map("order_id")
+  listingId String  @map("listing_id")
+  sellerId  String  @map("seller_id")
+  qty       Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(12, 2)
+  subtotal  Decimal @db.Decimal(12, 2)
+
+  // --- Relations ---
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  seller  User    @relation("SellerOrderItems", fields: [sellerId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}

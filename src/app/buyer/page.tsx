@@ -148,19 +148,19 @@ export default async function BuyerCategoryHubPage() {
               Official Material Categories
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Curated строительные materials directly available from verified Addis Ababa suppliers ({totalOffers} depot offers).
+              Curated construction materials directly available from verified Addis Ababa suppliers ({totalOffers} depot offers).
             </p>
           </div>
           <Link
             href="/buyer/category/all"
-            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 shrink-0"
           >
             <span>View All Materials</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
           {categories.map((cat) => {
             const IconComponent = ICON_MAP[cat.iconName] || Package;
 
@@ -168,31 +168,31 @@ export default async function BuyerCategoryHubPage() {
               <Link
                 key={cat.id}
                 href={`/buyer/category/${cat.slug}`}
-                className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 hover:border-primary/60 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                className="group relative overflow-hidden rounded-xl border border-border bg-card p-3.5 sm:p-5 hover:border-primary/60 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
               >
-                <div className="space-y-3">
+                <div className="space-y-2.5 sm:space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <IconComponent className="h-5 w-5" />
+                    <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-mono">
+                    <Badge variant="secondary" className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2">
                       {cat.listingCount} {cat.listingCount === 1 ? "depot" : "depots"}
                     </Badge>
                   </div>
 
                   <div>
-                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                    <h3 className="font-bold text-xs sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
                       {cat.name}
                     </h3>
-                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground line-clamp-2 leading-tight sm:leading-relaxed">
                       {cat.description || "Wholesale building materials and certified specifications."}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground group-hover:text-primary font-medium">
-                  <span>Compare Offers</span>
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-border/40 flex items-center justify-between text-[11px] sm:text-xs text-muted-foreground group-hover:text-primary font-medium">
+                  <span>Compare</span>
+                  <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>
             );

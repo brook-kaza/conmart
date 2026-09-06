@@ -100,15 +100,15 @@ export function CategoryView({
         </span>
       </nav>
 
-      {/* 2. HORIZONTAL CATEGORY SWITCHER STRIP */}
-      <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-background/95 backdrop-blur-md border-y border-border/40 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-2 min-w-max">
+      {/* 2. CATEGORY SWITCHER (NO HORIZONTAL SCROLL ON MOBILE - ALL VISIBLE IN ONE VIEW) */}
+      <div className="sticky top-0 z-10 -mx-4 px-4 py-2.5 bg-background/95 backdrop-blur-md border-y border-border/40">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <Link
             href="/buyer/category/all"
             className={cn(
-              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all shadow-xs",
+              "rounded-full px-2.5 sm:px-3.5 py-1 text-xs font-semibold transition-all shadow-xs",
               isAll
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground font-bold"
                 : "border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
             )}
           >
@@ -123,9 +123,9 @@ export function CategoryView({
                 key={cat.id}
                 href={`/buyer/category/${cat.slug}`}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition-all shadow-xs",
+                  "flex items-center gap-1 rounded-full px-2.5 sm:px-3.5 py-1 text-xs font-semibold transition-all shadow-xs",
                   isCurrent
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground font-bold"
                     : "border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 )}
               >
@@ -134,7 +134,7 @@ export function CategoryView({
                   className={cn(
                     "text-[10px] px-1.5 py-0.2 rounded-full",
                     isCurrent
-                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      ? "bg-primary-foreground/20 text-primary-foreground font-bold"
                       : "bg-muted text-muted-foreground"
                   )}
                 >

@@ -7,7 +7,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Package, FileText, SendHorizontal } from "lucide-react";
+import { LayoutGrid, Package, FileText, SendHorizontal, Info } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +36,11 @@ export function BuyerSidebarNav() {
       href: "/buyer/orders",
       label: t("nav_bank_proformas", "Bank Proformas"),
       icon: FileText,
+    },
+    {
+      href: "/about",
+      label: t("nav_about", "About Us"),
+      icon: Info,
     },
   ];
 

@@ -16,7 +16,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function HomePage() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const adminPhone = process.env.NEXT_PUBLIC_ADMIN_PHONE ?? "+251 91 100 0000";
 
   return (
@@ -33,6 +33,28 @@ export default function HomePage() {
               <span className="text-[10px] font-medium leading-none text-muted-foreground">Ethiopia</span>
             </div>
           </div>
+
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <Link
+              href="/buyer/category/all"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t("nav_all_materials", "Materials")}
+            </Link>
+            <Link
+              href="/buyer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t("nav_categories", "Categories")}
+            </Link>
+            <Link
+              href="/about"
+              className="text-muted-foreground hover:text-primary transition-colors font-semibold"
+            >
+              {t("nav_about", "About Us")}
+            </Link>
+          </nav>
+
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
@@ -178,14 +200,83 @@ export default function HomePage() {
       </main>
 
       {/* --- Footer --- */}
-      <footer className="border-t border-border/50 py-6">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 sm:flex-row">
-          <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} ConMart Ethiopia. {t("footer_tagline")}
-          </p>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Phone className="h-3 w-3" />
-            <span>{adminPhone}</span>
+      <footer className="border-t border-border/60 bg-card/60 py-10 px-4">
+        <div className="mx-auto max-w-6xl grid gap-8 sm:grid-cols-2 md:grid-cols-4 text-xs">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
+                <HardHat className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-sm text-foreground">ConMart Ethiopia</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed">
+              {t("brand_tagline", "Ethiopia's premier B2B construction wholesale trading platform.")}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              &copy; {new Date().getFullYear()} ConMart Ethiopia. {t("footer_tagline")}
+            </p>
+          </div>
+
+          <div className="space-y-2.5">
+            <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
+              {t("nav_categories", "Marketplace")}
+            </h4>
+            <ul className="space-y-1.5 text-muted-foreground">
+              <li>
+                <Link href="/buyer/category/all" className="hover:text-foreground transition-colors">
+                  {t("nav_all_materials", "All Materials")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/buyer" className="hover:text-foreground transition-colors">
+                  {t("nav_categories", "Browse Categories")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-foreground transition-colors font-medium text-foreground">
+                  {t("nav_about", "About ConMart")}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-2.5">
+            <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
+              {locale === "am" ? "አቅራቢዎችና ዋስትና" : "Suppliers & Trust"}
+            </h4>
+            <ul className="space-y-1.5 text-muted-foreground">
+              <li>
+                <Link href="/register" className="hover:text-foreground transition-colors">
+                  {t("about_cta_seller_btn", "Register as Supplier")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-foreground transition-colors">
+                  {t("about_pillar_3_title", "80% Refund Guarantee")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/login" className="hover:text-foreground transition-colors">
+                  {t("nav_seller_portal", "Supplier Portal")}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-2.5">
+            <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
+              {t("nav_support", "Support & Office")}
+            </h4>
+            <div className="space-y-1 text-muted-foreground">
+              <p className="flex items-center gap-1.5 text-foreground font-semibold">
+                <Phone className="h-3.5 w-3.5 text-primary" />
+                <span>{adminPhone}</span>
+              </p>
+              <p className="flex items-center gap-1.5 pt-1">
+                <MapPin className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                <span>Addis Ababa, Bole Sub-City</span>
+              </p>
+            </div>
           </div>
         </div>
       </footer>

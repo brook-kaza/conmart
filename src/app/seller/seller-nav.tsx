@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Package, PlusCircle, LogOut, Wallet, Inbox } from "lucide-react";
+import { Package, PlusCircle, LogOut, Wallet, Inbox, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -42,6 +42,12 @@ export function SellerSidebarNav() {
       label: t("seller_add_material"),
       icon: PlusCircle,
       active: pathname === "/seller/listings/new",
+    },
+    {
+      href: "/about",
+      label: t("nav_about", "About Us"),
+      icon: Info,
+      active: pathname === "/about",
     },
   ];
 

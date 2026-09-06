@@ -160,7 +160,7 @@ export default async function BuyerCategoryHubPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-3.5">
           {categories.map((cat) => {
             const IconComponent = ICON_MAP[cat.iconName] || Package;
 
@@ -168,31 +168,22 @@ export default async function BuyerCategoryHubPage() {
               <Link
                 key={cat.id}
                 href={`/buyer/category/${cat.slug}`}
-                className="group relative overflow-hidden rounded-xl border border-border bg-card p-3.5 sm:p-5 hover:border-primary/60 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                className="group relative overflow-hidden rounded-xl border border-border bg-card p-2 sm:p-3.5 hover:border-primary/60 hover:shadow-md transition-all duration-300 flex flex-col items-center text-center justify-between min-h-[105px] sm:min-h-[130px]"
               >
-                <div className="space-y-2.5 sm:space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </div>
-                    <Badge variant="secondary" className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2">
-                      {cat.listingCount} {cat.listingCount === 1 ? "depot" : "depots"}
-                    </Badge>
+                <div className="flex flex-col items-center space-y-1 sm:space-y-2 w-full">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-2xs">
+                    <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
 
-                  <div>
-                    <h3 className="font-bold text-xs sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                      {cat.name}
-                    </h3>
-                    <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground line-clamp-2 leading-tight sm:leading-relaxed">
-                      {cat.description || "Wholesale building materials and certified specifications."}
-                    </p>
-                  </div>
+                  <h3 className="font-bold text-[10px] sm:text-xs text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                    {cat.name}
+                  </h3>
                 </div>
 
-                <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-border/40 flex items-center justify-between text-[11px] sm:text-xs text-muted-foreground group-hover:text-primary font-medium">
-                  <span>Compare</span>
-                  <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform group-hover:translate-x-1" />
+                <div className="mt-1 w-full">
+                  <span className="inline-block rounded-full bg-muted/60 px-1.5 py-0.2 text-[9px] sm:text-[10px] font-mono text-muted-foreground group-hover:text-foreground">
+                    {cat.listingCount} {cat.listingCount === 1 ? "depot" : "depots"}
+                  </span>
                 </div>
               </Link>
             );

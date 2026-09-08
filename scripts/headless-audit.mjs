@@ -536,9 +536,9 @@ async function testDomain6_HttpRoutingAndSecurity() {
   });
 
   await checkRoute("/api/upload", {
-    expectedStatus: [307, 308],
+    expectedStatus: [401, 307, 308],
     method: "POST",
-    label: "RBAC Guard: /api/upload requires SELLER/ADMIN auth (redirects to /login)",
+    label: "RBAC Guard: /api/upload requires SELLER/ADMIN auth (returns 401 or redirects)",
   });
 }
 

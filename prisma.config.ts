@@ -31,4 +31,8 @@ if (!url) {
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: { url },
+  migrations: {
+    seed: "npx tsx ./prisma/seed.ts",
+  },
 });
+
